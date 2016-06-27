@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generator culturi - Plante</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/picklist.css">
+</head>
+<body>
+
+
+<div class="container">
+
+    <div class="well">
+        <div class="row">
+            <div class="col-md-12 centered">
+                <a href="/" class="btn btn-info btn-lg" role="button">Index</a>
+                <a href="/generate" class="btn btn-info btn-lg" role="button">Generator</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="well">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="row">
+                    <a href="#" class="btn btn-info btn-sm" role="button" data-bind="click: newPlant">Nou</a>
+                    <a href="#" data-bind="enable: hasPlantSelected"
+                       class="btn btn-danger btn-sm" role="button">Sterge</a>
+                </div>
+
+                <div class="row" style="margin-top: 10px">
+                    <select data-bind="options: plants,
+                                   optionsText: 'name',
+                                   value: plantSelected"
+                            size="20" style="width: 100%">
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <form>
+                    <div class="form-group">
+                        <label for="name">Nume</label>
+                        <input type="text" class="form-control" id="name" placeholder="Nume"
+                               data-bind="value: plantSelected() ? plantSelected().name : ''">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="size">Dimensiune</label>
+                                <select id="size" class="form-control"
+                                        data-bind="options: plantSizes,
+                                           value: plantSelected() ? plantSelected().plantSize : '',
+                                           optionsCaption: 'Alege...'"></select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="incubation">Zile incubare</label>
+                                <input type="number" id="incubation" class="form-control" placeholder="Zile"
+                                       data-bind="value: plantSelected() ? plantSelected().incubationDays : ''">
+                                <p class="help-block">Cate zile dureaza incubarea plantei, de la insamantare pana la
+                                    recolta.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="startp" style="width: 100%">Interval favorabil</label>
+                        <select id="startp" class="form-control"
+                                style="width: 40%; display: inline-block"
+                                data-bind="options: months,
+                                           value: plantSelected() ? plantSelected().startPeriod : '',
+                                           optionsCaption: 'Luna inceput...'"></select>
+                        <select id="endp" class="form-control"
+                                style="width: 40%; display: inline-block"
+                                data-bind="options: months,
+                                           value: plantSelected() ? plantSelected().endPeriod : '',
+                                           optionsCaption: 'Luna sfarsit...'"></select>
+                        <p class="help-block">Intervalul de la care se poate planta.</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="humidity">Umiditate</label>
+                        <select id="humidity" class="form-control"
+                                data-bind="options: humidity,
+                                           value: plantSelected() ? plantSelected().humidity : '',
+                                           optionsCaption: 'Alege...'"></select>
+                    </div>
+                    <div class="form-group">
+                        <div class='row'>
+                            <div class='col-sm-5'>
+                                <select class='form-control pickListSelect' id='pickData'
+                                        data-bind="options: plantOptionAvailable,
+                                                   optionsText: 'name',
+                                                   value: plantOptionSelected"
+                                        multiple>
+                                </select>
+                            </div>
+                            <div class='col-sm-2 pickListButtons'>
+                                <button class='btn btn-primary btn-sm'
+                                        data-bind="click: addSelectedPlant">Adauga
+                                </button>
+                                <button class='btn btn-primary btn-sm'
+                                        data-bind="click: removeSelectedPlant">Sterge
+                                </button>
+                            </div>
+                            <div class='col-sm-5'>
+                                <select class='form-control pickListSelect' id='pickListResult'
+                                        data-bind="options: plantOptionAdded,
+                                                   optionsText: 'name',
+                                                   value: plantOptionSelected"
+                                        multiple>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-default"
+                            data-bind="click: savePlant">Salveaza
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="/js/jquery.min.js"></script>
+<script src="/js/bootstrap.js"></script>
+<script src="/js/knockout.min.js"></script>
+<script type="text/javascript">
+    // js models
+    var Plant = function (name, size, startP, endP, incubation, humidity) {
+        this.name = ko.observable(name);
+        this.plantSize = ko.observable(size);
+        this.startPeriod = ko.observable(startP);
+        this.endPeriod = ko.observable(endP);
+        this.incubationDays = ko.observable(incubation);
+        this.humidity = ko.observable(humidity);
+    };
+
+    // functionality
+    function AppViewModel() {
+        humidity = ko.observableArray();
+        plantSizes = ko.observableArray();
+        plantSizeSelected = ko.observable();
+        plants = ko.observableArray();
+        months = ko.observableArray();
+        monthSSelected = ko.observable();
+        monthESelected = ko.observable();
+        plantSelected = ko.observable();
+
+        plantOptionAvailable = ko.observableArray();
+        plantOptionAdded = ko.observableArray();
+        plantOptionSelected = ko.observable();
+
+//      New plant
+        newPlant = function () {
+            plantSelected(null);
+            plantSelected = ko.observable(new Plant());
+            plantSelected().name('');
+            plantSelected().plantSize('');
+            plantSelected().startPeriod('');
+            plantSelected().endPeriod('');
+            plantSelected().incubationDays('');
+            plantSelected().humidity('');
+        };
+        newPlant();
+
+//        load the plants
+        loadPlants = function(){
+            newPlant();
+            plants.removeAll();
+            plantOptionAvailable.removeAll();
+            $.getJSON("/plants/all", function (data) {
+                $.each(data, function (index, p) {
+                    plants.push(new Plant(p.name, p.plantSize, p.startPeriod, p.endPeriod, p.incubationDays, p.humidity));
+                    plantOptionAvailable.push(new Plant(p.name, p.plantSize, p.startPeriod, p.endPeriod, p.incubationDays, p.humidity));
+                });
+            });
+        };
+        loadPlants();
+
+//        load the metadata
+        $.getJSON("/md/size", function (data) {
+            $.each(data, function (index, size) {
+                plantSizes.push(size);
+            });
+        });
+        $.getJSON("/md/months", function (data) {
+            $.each(data, function (index, month) {
+                months.push(month);
+            });
+        });
+        $.getJSON("/md/humidity", function (data) {
+            $.each(data, function (index, hum) {
+                humidity.push(hum);
+            });
+        });
+
+//        Save actions plant
+        savePlant = function () {
+            var data = ko.toJSON(plantSelected);
+            console.log('save plant' + data);
+            $.post("/plants", data, function (returnedData) {
+                loadPlants();
+            })
+        };
+
+//        pick list functionality
+        addSelectedPlant = function () {
+            if (plantOptionSelected() != undefined) {
+                plantOptionAdded.push(plantOptionSelected());
+                plantOptionAvailable.remove(plantOptionSelected());
+            }
+        };
+        removeSelectedPlant = function () {
+            if (plantOptionSelected() != undefined) {
+                plantOptionAdded.remove(plantOptionSelected());
+                plantOptionAvailable.push(plantOptionSelected());
+            }
+        };
+
+        hasPlantSelected = function () {
+            return plantSelected() != undefined;
+        }
+    }
+
+    // Activates knockout.js
+    ko.applyBindings(new AppViewModel());
+</script>
+</body>
+</html>
